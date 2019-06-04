@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Akka.Actor;
+﻿using Akka.Actor;
 using AkkaPOC.Messages;
+using System;
 
 namespace AkkaPOC.Actors
 {
@@ -20,6 +18,24 @@ namespace AkkaPOC.Actors
         private void HandleClaimOpeningRequest(OpenClaimMessage message)
         {
             Console.WriteLine("Attempting to open claim with id: " + message.Number + "/" + message.Year);
+        }
+
+        protected override void PreRestart(Exception reason, object message)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Restarting " + nameof(OpenClaimActor));
+            Console.ForegroundColor = ConsoleColor.White;
+
+            base.PreRestart(reason, message);
+        }
+
+        protected override void PostRestart(Exception reason)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Restarted " + nameof(OpenClaimActor));
+            Console.ForegroundColor = ConsoleColor.White;
+
+            base.PostRestart(reason);
         }
     }
 }

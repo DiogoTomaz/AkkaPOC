@@ -22,5 +22,19 @@ namespace AkkaPOC.Actors
                 Unhandled(message); // Recommended approach to message that won't be handled. They should be handled up stream.
             }
         }
+
+        protected override void PreStart()
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Opening DB Connection!");
+            Console.ForegroundColor = ConsoleColor.White;            
+        }
+
+        protected override void PostStop()
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Disposing of DB Connection");
+            Console.ForegroundColor = ConsoleColor.White;            
+        }
     }
 }

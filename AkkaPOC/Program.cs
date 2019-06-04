@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Akka.Actor;
 using AkkaPOC.Actors;
 using AkkaPOC.Messages;
@@ -8,22 +9,40 @@ namespace AkkaPOC
     class Program
     {
 
-        private static ActorSystem MyActorSystem; // Change to better naming
-        static void Main(string[] args)
+        private static ActorSystem ClaimHandlingSystem; // Change to better naming
+        static async Task Main(string[] args)
         {
-            MyActorSystem = ActorSystem.Create("MyActorSystem");
-            Console.WriteLine("MyActorSystem is up!");
+            ClaimHandlingSystem = ActorSystem.Create("ClaimHandlingSystem");
 
-            Props myProps = Props.Create<ClaimFetcherActor>();
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine("Claim Handling System is up!");
+            Console.ForegroundColor = ConsoleColor.White;
 
-            IActorRef claimFetcherActorRef = MyActorSystem.ActorOf(myProps, "claimFetcher");
+            Props claimFetchProps = Props.Create<ClaimFetcherActor>();
+            Props openClaimProps = Props.Create<OpenClaimActor>();
+
+            IActorRef claimFetcherActorRef = ClaimHandlingSystem.ActorOf(claimFetchProps, "claimFetcher");
+            IActorRef claimOpenerActorRef = ClaimHandlingSystem.ActorOf(openClaimProps, "claimOpener");
 
             claimFetcherActorRef.Tell(new FetchClaimMessage(Guid.NewGuid()));
+            claimFetcherActorRef.Tell(new FetchClaimMessage(Guid.NewGuid()));
+
+            // Tells the actor to shutdown, BUT first deal with all the messages in it's mail box
+            claimFetcherActorRef.Tell(PoisonPill.Instance);
+
+            // Gracefully stop the actor, awaiting 5 seconds. If more time passes, throw exception
+            await claimOpenerActorRef.GracefulStop(TimeSpan.FromSeconds(5));
+
+
+            Console.ReadKey();
             
+            await ClaimHandlingSystem.Terminate();
 
-            Console.ReadLine();
+            Console.ForegroundColor = ConsoleColor.DarkRed;
+            Console.WriteLine("Claim Handling System is down!");
+            Console.ForegroundColor = ConsoleColor.White;
 
-            MyActorSystem.Terminate();
+            Console.ReadKey();
         }
     }
 }
